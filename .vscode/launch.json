@@ -1,0 +1,42 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug c App",
+      "type": "cppdbg",
+      "request": "launch",
+      "preLaunchTask": "Run Make",
+      "program": "${workspaceFolder}/debug/${fileBasenameNoExtension}",
+      "args": [
+        "${input:window_id}",
+        "send-event",
+        "_NET_WM_STATE",
+        "_NET_WM_STATE_MAXIMIZED_VERT,_NET_WM_STATE_MAXIMIZED_HORIZ"
+      ],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        },
+        {
+          "description": "Set Disassembly Flavor to Intel",
+          "text": "-gdb-set disassembly-flavor intel",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ],
+  "inputs": [
+    {
+      "id": "window_id",
+      "type": "promptString",
+      "description": "Please enter a Window id from \"xwininfo -int\""
+    }
+  ]
+}
