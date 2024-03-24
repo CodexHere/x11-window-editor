@@ -46,12 +46,28 @@ int main(int argc, char *argv[])
     else if (0 == strcmp(subCommand, "fixed-size"))
     {
         // Args 3 & 4 are width and height
+
+        if (5 > argc)
+        {
+            fprintf(stderr, "Error: Missing Options.\n\n");
+            help(argv[0]);
+            exit(5);
+        }
+
         HHWindow.set_fixed_size(windowId, argv[3], argv[4]);
     }
     else if (0 == strcmp(subCommand, "send-event"))
     {
         // Arg 3 = Event Name
         // Arg 4 = Atoms as comma-separated string
+        // Arg 5 = Whether or not to Add or Remove (any value = add)
+
+        if (6 > argc)
+        {
+            fprintf(stderr, "Error: Missing Options.\n\n");
+            help(argv[0]);
+            exit(5);
+        }
 
         int num_atoms = 0;
         char *name = argv[3];
@@ -64,6 +80,13 @@ int main(int argc, char *argv[])
     {
         // Arg 3 = Prop Name
         // Arg 4 = Atoms as comma-separated string
+
+        if (5 > argc)
+        {
+            fprintf(stderr, "Error: Missing Options.\n\n");
+            help(argv[0]);
+            exit(5);
+        }
 
         int num_atoms = 0;
         char *name = argv[3];
