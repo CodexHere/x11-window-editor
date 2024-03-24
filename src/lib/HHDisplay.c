@@ -30,7 +30,10 @@ void detach(Display *display)
     XCloseDisplay(display);
 }
 
-// Expose Namespace
+////////////////////////////////////////////////////////////
+// Namespace Definition
+////////////////////////////////////////////////////////////
+
 NSHHDisplay HHDisplay = {
     .attach = attach,
     .detach = detach

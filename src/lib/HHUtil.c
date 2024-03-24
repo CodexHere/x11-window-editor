@@ -54,6 +54,10 @@ char **delimit(char *input, char *delimiter, int *num_items)
     return items;
 }
 
+////////////////////////////////////////////////////////////
+// Namespace Definition
+////////////////////////////////////////////////////////////
+
 NSHHUtil HHUtil = {
     .delimit = delimit,
     .trim = trim

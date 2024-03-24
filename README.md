@@ -6,9 +6,9 @@ There's `xdotool` which is great for a lot of things so definitely check that to
 
 And `xprop` can do some of the other simpler stuff really well - but doesn't let you set [complex Atom Types](https://github.com/tmathmeyer/xprop/blob/master/xprop.c#L1749-L1755), such as [Window Properties](https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html#idm46485863921328) like [`_NET_WM_STATE`](https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html#idm46485863892896), or [`_NET_WM_WINDOW_TYPE`](https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html#idm46485863906176).
 
-To be more accurate, it *does* let you set practically any property, but in most cases it isn't the correct approach. In many cases, you need to send an `XEvent` for the Window Manager to actually care about your values you're setting.
+To be more accurate, it *does* let you set practically any property, but in most cases it isn't the correct approach by using [`XChangeProperty`](https://tronche.com/gui/x/xlib/window-information/XChangeProperty.html). While this does allow setting properties such as `_NET_WM_STATE`, in many cases you need to send an [`XEvent`](https://tronche.com/gui/x/xlib/events/client-communication/client-message.html) for the Window Manager to actually care about your values you're setting.
 
-So that's why I built this simple command line tool in C to do the quick and dirty editing these tools leave out!
+So that's why I built this simple command line tool in C - to do the quick and dirty editing these tools leave out!
 
 ## Requirements
 
@@ -27,23 +27,19 @@ make
 ```sh
 make install
 # or
-make install PATH=../output
+make install DIR_INSTALL=../output
+```
 
 ## Usage
 
 ```sh
+${DIR_INSTALL}/edit_window
+```
 
+Review the `Help` output from the application.
 
 ## Useful Links
 
-Extended Window Manager Hints Documentation:
-    https://specifications.freedesktop.org/wm-spec/latest/
-
-`_NET_WM_WINDOW_TYPE`s:
-    https://specifications.freedesktop.org/wm-spec/latest/ar01s05.html#idm44882398096864
-
-`_NET_WM_STATE`s:
-    https://specifications.freedesktop.org/wm-spec/latest/ar01s05.html#idm44882398084176
-
-Set Name: xprop -id $window_id -f _NET_WM_NAME 8u -set _NET_WM_NAME "New Title is Set"
-Set Role: xprop -id $window_id -f WM_WINDOW_ROLE 8s -set WM_WINDOW_ROLE "SomeRole"
+* [Extended Window Manager Hints Documentation](https://specifications.freedesktop.org/wm-spec/latest/)
+* [`_NET_WM_WINDOW_TYPE`s](https://specifications.freedesktop.org/wm-spec/latest/ar01s05.html#idm44882398096864)
+* [`_NET_WM_STATE`s](https://specifications.freedesktop.org/wm-spec/latest/ar01s05.html#idm44882398084176)
