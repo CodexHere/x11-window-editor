@@ -1,159 +1,218 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "./lib/HHCli.h"
 #include "./lib/HHDisplay.h"
 #include "./lib/HHWindow.h"
-#include "./lib/HHUtil.h"
 
 /**
  * Exit Codes
  * 1 - Missing SubCommand
  * 5 - Invalid number of arguments for SubCommand
+ * 19 - Invalid format/type of arguments for SubCommand
  * 50 - Window ID is invalid, or doesn't exist
  * 99 - Out of memory / Couldn't allocate
  */
 
-void help(char *script)
+Window window_id;
+Action action = ACTION_NONE;
+Bool shouldToggle = False;
+int width = -1, height = -1;
+
+void process_arguments(int argc, char *argv[])
 {
-    printf(""
-           "Usage: %s <window_id> <subcommand> [options]\n\n"
-           "    <window_id>: The ID of the Window\n"
-           "    <subcommand>: Any one of the Sub Commands detailed below\n"
-           "\n\n"
-           "Sub Commands (and their options):\n\n"
-           "  maximize - Maximizes a Window\n"
-           "  minimize - Minimize a Window\n"
-           "  restore - Restore typical values for a Window\n"
-           "  toggle-fixed-size [<enabled> <width> <height>] - Sets a fixed size for a Window\n"
-           "    <enabled>: Enabled Status - If unsupplied, removes fixed-size and ignores other options.\n"
-           "    <width>: If Enabled, Fixed Width of the Window\n"
-           "    <height>: If Enabled, Fixed Height of the Window\n"
-           "  toggle-above <enabled> - Toggles Always Above for a Window\n"
-           "    <enabled>: Enabled Status\n"
-           "  toggle-below <enabled> - Toggles Always Below for a Window\n"
-           "    <enabled>: Enabled Status\n"
-           "  toggle-fullscreen <enabled> - Toggles Full Screen for a Window\n"
-           "    <enabled>: Enabled Status\n"
-           "  toggle-pager <enabled> - Toggles Allow Pager for a Window (not working?)\n"
-           "    <enabled>: Enabled Status\n"
-           "  toggle-shade <enabled> - Toggles RollUp Shade for a Window\n"
-           "    <enabled>: Enabled Status\n"
-           "  toggle-sticky <enabled> - Toggles Sticky Mode for a Window\n"
-           "    <enabled>: Enabled Status\n"
-           "  toggle-taskbar <enabled> - Toggles Taskbar Entry for a Window\n"
-           "    <enabled>: Enabled Status\n"
-           "\n\n"
-           "",
-           script);
+    int opt;
+    int option_index = 0;
+
+    char *opstring = ":hi:mnrz::a::b::s::y::t::p::f::";
+    char err_msg[100];
+
+    while ((opt = getopt_long(argc, argv, opstring, long_options, &option_index)) != -1)
+    {
+        switch (opt)
+        {
+        case 'h':
+            help(0, NULL);
+            break;
+        case 'i':
+            window_id = strtol(optarg, NULL, 0);
+
+            if (0 == window_id)
+            {
+                help(5, "Invalid Window ID Format.");
+            }
+
+            break;
+        case 'm':
+            action = ACTION_MAXIMIZE;
+            break;
+        case 'n':
+            action = ACTION_MINIMIZE;
+            break;
+        case 'r':
+            action = ACTION_RESTORE;
+            break;
+
+        /////////////////////////////////////////////////////////////////////////////
+        // Toggle Params
+        /////////////////////////////////////////////////////////////////////////////
+        case 'z':
+            action = ACTION_TOGGLE_FIXED_SIZE;
+            shouldToggle = NULL != optarg;
+            break;
+        case 'a':
+            action = ACTION_TOGGLE_ABOVE;
+            shouldToggle = NULL != optarg;
+            break;
+        case 'b':
+            action = ACTION_TOGGLE_BELOW;
+            shouldToggle = NULL != optarg;
+            break;
+        case 's':
+            action = ACTION_TOGGLE_SHADE;
+            shouldToggle = NULL != optarg;
+            break;
+        case 'y':
+            action = ACTION_TOGGLE_STICKY;
+            shouldToggle = NULL != optarg;
+            break;
+        case 't':
+            action = ACTION_TOGGLE_TASKBAR;
+            shouldToggle = NULL != optarg;
+            break;
+        case 'p':
+            action = ACTION_TOGGLE_PAGER;
+            shouldToggle = NULL != optarg;
+            break;
+        case 'f':
+            action = ACTION_TOGGLE_FULLSCREEN;
+            shouldToggle = NULL != optarg;
+            break;
+
+        /////////////////////////////////////////////////////////////////////////////
+        // Reusable Params
+        /////////////////////////////////////////////////////////////////////////////
+        case 100: // width
+            width = atoi(optarg);
+            if (0 >= width)
+            {
+                help(10, "Invalid Width.");
+            }
+            break;
+        case 101: // height
+            height = atoi(optarg);
+            if (0 >= height)
+            {
+                help(10, "Invalid Height.");
+            }
+            break;
+
+        /////////////////////////////////////////////////////////////////////////////
+        // Error Cases / Handlers
+        /////////////////////////////////////////////////////////////////////////////
+        case '?': // Extra param?
+            break;
+        case ':': // Missing param?
+            sprintf(err_msg, "Missing expected option argument for %s, be sure to check your supplied options.", argv[optind - 1]);
+            help(10, err_msg);
+            break;
+        case -1: // End of parameters
+            help(1, "An unknown error has occurred.");
+            break;
+        default:
+            sprintf(err_msg, "Unknown Argument: %c", opt);
+            help(5, err_msg);
+        }
+    }
+}
+
+void perform_action()
+{
+    // Perform the action based on the selected option
+    switch (action)
+    {
+    case ACTION_MAXIMIZE:
+        printf("Window Maximize");
+        HHWindow.maximize(window_id);
+        break;
+    case ACTION_MINIMIZE:
+        printf("Window Minimize");
+        HHWindow.minimize(window_id);
+        break;
+    case ACTION_RESTORE:
+        printf("Window Restore");
+        HHWindow.restore(window_id);
+        break;
+    case ACTION_TOGGLE_FIXED_SIZE:
+        if (shouldToggle && -1 >= width)
+        {
+            help(5, "Missing or invalid Width option.");
+        }
+
+        if (shouldToggle && -1 >= height)
+        {
+            help(5, "Missing or invalid Height option.");
+        }
+
+        printf("Toggling Fixed Size: %s : w=%i, h=%i", shouldToggle ? "Yes" : "No", width, height);
+
+        HHWindow.toggleFixedSize(window_id, shouldToggle, width, height);
+        break;
+    case ACTION_TOGGLE_ABOVE:
+        printf("Toggling Always Above: %s", shouldToggle ? "Yes" : "No");
+        HHWindow.toggleAbove(window_id, shouldToggle);
+        break;
+    case ACTION_TOGGLE_BELOW:
+        printf("Toggling Always Below: %s", shouldToggle ? "Yes" : "No");
+        HHWindow.toggleBelow(window_id, shouldToggle);
+        break;
+    case ACTION_TOGGLE_SHADE:
+        printf("Toggling Shade: %s", shouldToggle ? "Yes" : "No");
+        HHWindow.toggleShade(window_id, shouldToggle);
+        break;
+    case ACTION_TOGGLE_STICKY:
+        printf("Toggling Sticky: %s", shouldToggle ? "Yes" : "No");
+        HHWindow.toggleSticky(window_id, shouldToggle);
+        break;
+    case ACTION_TOGGLE_TASKBAR:
+        printf("Toggling Taskbar: %s", shouldToggle ? "Yes" : "No");
+        HHWindow.toggleTaskbar(window_id, shouldToggle);
+        break;
+    case ACTION_TOGGLE_PAGER:
+        printf("Toggling Pager: %s", shouldToggle ? "Yes" : "No");
+        HHWindow.togglePager(window_id, shouldToggle);
+        break;
+    case ACTION_TOGGLE_FULLSCREEN:
+        printf("Toggling Fullscreen: %s", shouldToggle ? "Yes" : "No");
+        HHWindow.toggleFullscreen(window_id, shouldToggle);
+        break;
+    default:
+        help(5, "Missing Sub Command to perform!");
+        break;
+    }
+
+    printf("\n");
 }
 
 int main(int argc, char *argv[])
 {
-    if (3 > argc)
+    script_name = argv[0];
+
+    if (argc < 2)
     {
-        help(argv[0]);
-        exit(1);
+        help(5, "Not enough arguments.");
     }
 
-    Window window_id = strtol(argv[1], NULL, 0);
-    char *sub_command = argv[2];
-    long mode = (4 > argc) ? HH_EVENT_MODE_REMOVE : HH_EVENT_MODE_ADD;
+    process_arguments(argc, argv);
 
-    if (0 == strcmp(sub_command, "minimize"))
+    // Make sure we have a Window ID set! Literally nothing will work without this!
+    if (0 == window_id) // NOLINT
     {
-        HHWindow.minimize(window_id);
+        help(5, "Missing Window ID (--id, -id).");
     }
-    else if (0 == strcmp(sub_command, "maximize"))
-    {
-        HHWindow.maximize(window_id);
-    }
-    else if (0 == strcmp(sub_command, "restore"))
-    {
-        HHWindow.restore(window_id);
-    }
-    else if (0 == strcmp(sub_command, "toggle-sticky"))
-    {
-        HHWindow.toggleSticky(window_id, mode);
-    }
-    else if (0 == strcmp(sub_command, "toggle-shade"))
-    {
-        HHWindow.toggleShade(window_id, mode);
-    }
-    else if (0 == strcmp(sub_command, "toggle-taskbar"))
-    {
-        long mode = (4 > argc) ? HH_EVENT_MODE_ADD : HH_EVENT_MODE_REMOVE;
-        HHWindow.toggleTaskbar(window_id, mode);
-    }
-    else if (0 == strcmp(sub_command, "toggle-pager"))
-    {
-        long mode = (4 > argc) ? HH_EVENT_MODE_ADD : HH_EVENT_MODE_REMOVE;
-        HHWindow.togglePager(window_id, mode);
-    }
-    else if (0 == strcmp(sub_command, "toggle-fullscreen"))
-    {
-        HHWindow.toggleFullscreen(window_id, mode);
-    }
-    else if (0 == strcmp(sub_command, "toggle-above"))
-    {
-        HHWindow.toggleAbove(window_id, mode);
-    }
-    else if (0 == strcmp(sub_command, "toggle-below"))
-    {
-        HHWindow.toggleBelow(window_id, mode);
-    }
-    else if (0 == strcmp(sub_command, "toggle-fixed-size"))
-    {
-        // Args 3 & 4 are width and height
 
-        if (5 > argc)
-        {
-            HHWindow.toggleFixedSize(window_id, False, NULL, NULL);
-        }
-        else
-        {
-            HHWindow.toggleFixedSize(window_id, True, argv[3], argv[4]);
-        }
-    }
-    else if (0 == strcmp(sub_command, "send-event"))
-    {
-        // Arg 3 = Event Name
-        // Arg 4 = Atoms as comma-separated string
-        // Arg 5 = Which HH_EVENT_MODE* to use
-
-        if (5 > argc)
-        {
-            fprintf(stderr, "Error: Missing Options.\n\n");
-            help(argv[0]);
-            exit(5);
-        }
-
-        int num_atoms = 0;
-        char *name = argv[3];
-        char **atoms = HHUtil.delimit(argv[4], ",", &num_atoms);
-        long mode = (6 > argc) ? HH_EVENT_MODE_TOGGLE : strtol(argv[5], NULL, 0);
-
-        HHWindow.send_event(window_id, name, atoms, num_atoms, mode);
-    }
-    else if (0 == strcmp(sub_command, "set-prop"))
-    {
-        // Arg 3 = Prop Name
-        // Arg 4 = Atoms as comma-separated string
-
-        if (5 > argc)
-        {
-            fprintf(stderr, "Error: Missing Options.\n\n");
-            help(argv[0]);
-            exit(5);
-        }
-
-        int num_atoms = 0;
-        char *name = argv[3];
-        char **atoms = HHUtil.delimit(argv[4], ",", &num_atoms);
-
-        HHWindow.set_property(window_id, name, atoms, num_atoms);
-    }
-    else
-    {
-        help(argv[0]);
-        exit(1);
-    }
+    perform_action();
 
     return 0;
 }

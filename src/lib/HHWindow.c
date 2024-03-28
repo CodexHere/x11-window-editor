@@ -36,7 +36,7 @@ void set_property(Window window_id, char *property_name, char *atom_names[], int
     HHDisplay.detach(display);
 }
 
-void send_event(Window window_id, char *event_name, char *atom_names[], int num_atoms, long mode)
+void send_event(Window window_id, char *event_name, char *atom_names[], int num_atoms, HH_EVENT_MODE eventMode)
 {
     Display *display = HHDisplay.attach();
 
@@ -46,7 +46,7 @@ void send_event(Window window_id, char *event_name, char *atom_names[], int num_
     xev.xclient.window = window_id;
     xev.xclient.message_type = XInternAtom(display, event_name, False);
     xev.xclient.format = 32;
-    xev.xclient.data.l[0] = mode;
+    xev.xclient.data.l[0] = eventMode;
 
     for (int i = 0; i < num_atoms; i += 2)
     {
@@ -88,7 +88,7 @@ XSizeHints *get_normal_hints(Display *display, Window window_id)
     return hints;
 }
 
-void toggleFixedSize(Window window_id, Bool enable, char *width, char *height)
+void toggleFixedSize(Window window_id, Bool enable, int width, int height)
 {
     Display *display = HHDisplay.attach();
     XSizeHints *hints = get_normal_hints(display, window_id);
@@ -97,8 +97,8 @@ void toggleFixedSize(Window window_id, Bool enable, char *width, char *height)
     {
         // Set the minimum and maximum size hints
         hints->flags = PMinSize | PMaxSize;
-        hints->min_width = hints->max_width = atoi(width);
-        hints->min_height = hints->max_height = atoi(height);
+        hints->min_width = hints->max_width = width;
+        hints->min_height = hints->max_height = height;
     }
     else
     {
@@ -119,7 +119,7 @@ void toggleFixedSize(Window window_id, Bool enable, char *width, char *height)
 void minimize(Window window_id)
 {
     char *atoms[] = {"_NET_WM_STATE_HIDDEN"};
-    send_event(window_id, "WM_CHANGE_STATE", atoms, 1, IconicState);
+    send_event(window_id, "WM_CHANGE_STATE", atoms, 1, HH_EVENT_MODE_MINIMIZE);
 }
 
 void maximize(Window window_id)
@@ -132,8 +132,7 @@ void maximize(Window window_id)
 
 void restore(Window window_id)
 {
-    // char *atoms1[] = {"_NET_WM_STATE_STICKY"};
-    char *atoms2[] = {
+    char *atoms[] = {
         "_NET_WM_STATE_MAXIMIZED_HORZ",
         "_NET_WM_STATE_MAXIMIZED_VERT",
         "_NET_WM_STATE_HIDDEN",
@@ -141,50 +140,49 @@ void restore(Window window_id)
         //
     };
 
-    // send_event(window_id, "WM_STATE_CHANGE", atoms1, 1, HH_EVENT_MODE_REMOVE);
-    send_event(window_id, "_NET_WM_STATE", atoms2, 4, HH_EVENT_MODE_REMOVE);
+    send_event(window_id, "_NET_WM_STATE", atoms, 4, HH_EVENT_MODE_REMOVE);
 }
 
-void toggleAbove(Window window_id, long mode)
+void toggleAbove(Window window_id, Bool isEnabled)
 {
     char *atoms[] = {"_NET_WM_STATE_ABOVE"};
-    send_event(window_id, "_NET_WM_STATE", atoms, 1, mode);
+    send_event(window_id, "_NET_WM_STATE", atoms, 1, isEnabled ? HH_EVENT_MODE_ADD : HH_EVENT_MODE_REMOVE);
 }
 
-void toggleBelow(Window window_id, long mode)
+void toggleBelow(Window window_id, Bool isEnabled)
 {
     char *atoms[] = {"_NET_WM_STATE_BELOW"};
-    send_event(window_id, "_NET_WM_STATE", atoms, 1, mode);
+    send_event(window_id, "_NET_WM_STATE", atoms, 1, isEnabled ? HH_EVENT_MODE_ADD : HH_EVENT_MODE_REMOVE);
 }
 
-void toggleFullscreen(Window window_id, long mode)
+void toggleFullscreen(Window window_id, Bool isEnabled)
 {
     char *atoms[] = {"_NET_WM_STATE_FULLSCREEN"};
-    send_event(window_id, "_NET_WM_STATE", atoms, 1, mode);
+    send_event(window_id, "_NET_WM_STATE", atoms, 1, isEnabled ? HH_EVENT_MODE_ADD : HH_EVENT_MODE_REMOVE);
 }
 
-void togglePager(Window window_id, long mode)
+void togglePager(Window window_id, Bool isEnabled)
 {
     char *atoms[] = {"_NET_WM_STATE_SKIP_PAGER"};
-    send_event(window_id, "_NET_WM_STATE", atoms, 1, mode);
+    send_event(window_id, "_NET_WM_STATE", atoms, 1, isEnabled ? HH_EVENT_MODE_ADD : HH_EVENT_MODE_REMOVE);
 }
 
-void toggleShade(Window window_id, long mode)
+void toggleShade(Window window_id, Bool isEnabled)
 {
     char *atoms[] = {"_NET_WM_STATE_SHADED"};
-    send_event(window_id, "_NET_WM_STATE", atoms, 1, mode);
+    send_event(window_id, "_NET_WM_STATE", atoms, 1, isEnabled ? HH_EVENT_MODE_ADD : HH_EVENT_MODE_REMOVE);
 }
 
-void toggleSticky(Window window_id, long mode)
+void toggleSticky(Window window_id, Bool isEnabled)
 {
     char *atoms[] = {"_NET_WM_STATE_STICKY"};
-    send_event(window_id, "_NET_WM_STATE", atoms, 1, mode);
+    send_event(window_id, "_NET_WM_STATE", atoms, 1, isEnabled ? HH_EVENT_MODE_ADD : HH_EVENT_MODE_REMOVE);
 }
 
-void toggleTaskbar(Window window_id, long mode)
+void toggleTaskbar(Window window_id, Bool isEnabled)
 {
     char *atoms[] = {"_NET_WM_STATE_SKIP_TASKBAR"};
-    send_event(window_id, "_NET_WM_STATE", atoms, 1, mode);
+    send_event(window_id, "_NET_WM_STATE", atoms, 1, isEnabled ? HH_EVENT_MODE_ADD : HH_EVENT_MODE_REMOVE);
 }
 
 ////////////////////////////////////////////////////////////

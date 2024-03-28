@@ -1,5 +1,5 @@
-#ifndef _LIB_HHDISPLAY_H_
-#define _LIB_HHDISPLAY_H_
+#ifndef LIB_HHDISPLAY_H
+#define LIB_HHDISPLAY_H
 
 #include <stdio.h>
 #include <stdlib.h>

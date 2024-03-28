@@ -7,12 +7,7 @@
       "request": "launch",
       "preLaunchTask": "Run Make",
       "program": "${workspaceFolder}/debug/${fileBasenameNoExtension}",
-      "args": [
-        "${input:window_id}",
-        "send-event",
-        "_NET_WM_STATE",
-        "_NET_WM_STATE_MAXIMIZED_VERT,_NET_WM_STATE_MAXIMIZED_HORIZ"
-      ],
+      "args": ["-i", "${input:window_id}", "-m"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],

@@ -1,5 +1,5 @@
-#ifndef _LIB_HHUTIL_H_
-#define _LIB_HHUTIL_H_
+#ifndef LIB_HHUTIL_H
+#define LIB_HHUTIL_H
 
 #include <ctype.h>
 #include <string.h>

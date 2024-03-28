@@ -2,7 +2,7 @@
 
 char *trim(const char *str)
 {
-    int len = strlen(str);
+    int len = (int)strlen(str);
     int start = -1;
     int end = len;
 
