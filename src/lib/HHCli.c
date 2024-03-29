@@ -5,15 +5,25 @@ char *script_name;
 struct option long_options[] = {
     {"help", no_argument, NULL, 'h'},
     {"id", required_argument, NULL, 'i'},
+
+    {"x", required_argument, NULL, 1001},
+    {"y", required_argument, NULL, 1002},
+    {"width", required_argument, NULL, 1005},
+    {"height", required_argument, NULL, 1006},
+
     {"maximize", no_argument, NULL, 'm'},
     {"minimize", no_argument, NULL, 'n'},
     {"restore", no_argument, NULL, 'r'},
-    {"raise", no_argument, NULL, 500},
+    {"raise", no_argument, NULL, 1500},
+    {"move", no_argument, NULL, 1501},
+    {"size", no_argument, NULL, 1502},
+
     {"set-title", required_argument, NULL, 'l'},
     {"set-role", required_argument, NULL, 'o'},
     {"set-window-type", required_argument, NULL, 'w'},
-    {"width", required_argument, NULL, 100},
-    {"height", required_argument, NULL, 101},
+    {"set-class", required_argument, NULL, 1600},
+    {"set-classname", required_argument, NULL, 1601},
+
     {"toggle-fixed-size", optional_argument, NULL, 'z'},
     {"toggle-above", optional_argument, NULL, 'a'},
     {"toggle-below", optional_argument, NULL, 'b'},
@@ -22,13 +32,13 @@ struct option long_options[] = {
     {"toggle-taskbar", optional_argument, NULL, 't'},
     {"toggle-pager", optional_argument, NULL, 'p'},
     {"toggle-fullscreen", optional_argument, NULL, 'f'},
-    {"raw-set-prop", required_argument, NULL, 1000},
-    {"raw-send-event", required_argument, NULL, 1010},
-    {"atoms", required_argument, NULL, 1500},
-    {"atom-format", required_argument, NULL, 1505},
-    {"atom-type", required_argument, NULL, 1506},
-    {"atom-value-raw", no_argument, NULL, 1507},
-    {"event-mode", required_argument, NULL, 1510},
+    {"raw-set-prop", required_argument, NULL, 9000},
+    {"raw-send-event", required_argument, NULL, 9010},
+    {"atoms", required_argument, NULL, 9500},
+    {"atom-format", required_argument, NULL, 9505},
+    {"atom-type", required_argument, NULL, 9506},
+    {"atom-value-raw", no_argument, NULL, 9507},
+    {"event-mode", required_argument, NULL, 9510},
     {0, 0, 0, 0}};
 
 void help(int exit_code, char *error_message)
@@ -43,6 +53,8 @@ void help(int exit_code, char *error_message)
         " -m, --maximize: Maximizes a Window.\n\n"
         " -n, --minimize: Minimize a Window.\n\n"
         " -r, --restore: Restore typical values for a Window.\n\n"
+        " --move: Move a Window.  --x/--y *must* also be supplied!\n\n"
+        " --size: Size a Window.  --width/--height *must* also be supplied!\n\n"
         " -l=\"New Title\", --set-title=\"New Title\": Sets a Title for a Window.\n\n"
         " -o=\"New_Role\", --set-role=\"New_Role\": Sets a Role for a Window.\n\n"
         " -w=<window_type>, --set-window-type=<window_type>: Sets a Window Type for a Window.\n"

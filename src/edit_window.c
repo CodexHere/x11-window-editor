@@ -19,7 +19,7 @@
 Window window_id;
 Action action = ACTION_NONE;
 Bool shouldToggle = False;
-int width = -1, height = -1;
+int width = -1, height = -1, x = -1, y = -1;
 
 char *raw_name;
 int num_atoms = 0;
@@ -124,43 +124,72 @@ void process_arguments(int argc, char *argv[])
         /////////////////////////////////////////////////////////////////////////////
         // Reusable Params
         /////////////////////////////////////////////////////////////////////////////
-        case 100: // width
+        case 1005: // width
             width = atoi(optarg);
             if (0 >= width)
             {
                 help(10, "Invalid Width.");
             }
             break;
-        case 101: // height
+        case 1006: // height
             height = atoi(optarg);
             if (0 >= height)
             {
                 help(10, "Invalid Height.");
             }
             break;
+        case 1001: // x
+            x = atoi(optarg);
+            if (0 > x)
+            {
+                help(10, "Invalid X.");
+            }
+            break;
+        case 1002: // y
+            y = atoi(optarg);
+            if (0 > y)
+            {
+                help(10, "Invalid Y.");
+            }
+            break;
 
         /////////////////////////////////////////////////////////////////////////////
         // Actions w/o Short Codes
         /////////////////////////////////////////////////////////////////////////////
-        case 500:
+        case 1500:
             set_action(ACTION_RAISE);
+            break;
+        case 1501:
+            set_action(ACTION_MOVE);
+            break;
+        case 1502:
+            set_action(ACTION_SIZE);
+            break;
+
+        case 1600:
+            set_action(ACTION_SET_CLASS);
+            raw_name = optarg;
+            break;
+        case 1601:
+            set_action(ACTION_SET_CLASSNAME);
+            raw_name = optarg;
             break;
 
         /////////////////////////////////////////////////////////////////////////////
         // Raw Setters
         /////////////////////////////////////////////////////////////////////////////
-        case 1000: // Set Raw Property
+        case 9000: // Set Raw Property
             set_action(ACTION_RAW_PROP);
             raw_name = optarg;
             break;
-        case 1010: // Send Raw Event
+        case 9010: // Send Raw Event
             set_action(ACTION_RAW_EVENT);
             raw_name = optarg;
             break;
-        case 1500: // Set ATOMs list
+        case 9500: // Set ATOMs list
             atoms = HHUtil.delimit(optarg, ",", &num_atoms);
             break;
-        case 1505: // Set ATOMs format
+        case 9505: // Set ATOMs format
             atom_format = atoi(optarg);
             if (atom_format != 8 && atom_format != 16 && atom_format != 32)
             {
@@ -168,13 +197,13 @@ void process_arguments(int argc, char *argv[])
                 help(10, err_msg);
             }
             break;
-        case 1506: // Set ATOMs Type
+        case 9506: // Set ATOMs Type
             atom_property_type = optarg;
             break;
-        case 1507: // Set Atom Raw mode
+        case 9507: // Set Atom Raw mode
             is_atom_raw = True;
             break;
-        case 1510: // Set Event Mode (add/remove/toggle/etc)
+        case 9510: // Set Event Mode (add/remove/toggle/etc)
             event_mode = atoi(optarg);
             break;
 
@@ -202,6 +231,9 @@ void perform_action()
     // Perform the action based on the selected option
     switch (action)
     {
+    /////////////////////////////////////////////////////////////////////////////
+    // Actions
+    /////////////////////////////////////////////////////////////////////////////
     case ACTION_MAXIMIZE:
         printf("Window Maximize");
         HHWindow.maximize(window_id);
@@ -218,7 +250,38 @@ void perform_action()
         printf("Window Raise");
         HHWindow.raise(window_id);
         break;
+    case ACTION_MOVE:
+        if (-1 >= x)
+        {
+            help(10, "Missing or invalid X option.");
+        }
 
+        if (-1 >= y)
+        {
+            help(10, "Missing or invalid Y option.");
+        }
+
+        printf("Window Move: %i, %i", x, y);
+        HHWindow.move(window_id, x, y);
+        break;
+    case ACTION_SIZE:
+        if (-1 >= width)
+        {
+            help(10, "Missing or invalid Width option.");
+        }
+
+        if (-1 >= height)
+        {
+            help(10, "Missing or invalid Height option.");
+        }
+
+        printf("Window Size: %i, %i", width, height);
+        HHWindow.size(window_id, width, height);
+        break;
+
+    /////////////////////////////////////////////////////////////////////////////
+    // Properties
+    /////////////////////////////////////////////////////////////////////////////
     case ACTION_SET_TITLE:
         printf("Setting Title: %s", raw_name);
         HHWindow.set_title(window_id, raw_name);
@@ -231,6 +294,18 @@ void perform_action()
         printf("Setting Window Type: %s", raw_name);
         HHWindow.set_window_type(window_id, raw_name);
         break;
+    case ACTION_SET_CLASS:
+        printf("Setting Class: %s", raw_name);
+        HHWindow.set_class(window_id, raw_name);
+        break;
+    case ACTION_SET_CLASSNAME:
+        printf("Setting ClassName: %s", raw_name);
+        HHWindow.set_classname(window_id, raw_name);
+        break;
+
+    /////////////////////////////////////////////////////////////////////////////
+    // Toggle Values
+    /////////////////////////////////////////////////////////////////////////////
     case ACTION_TOGGLE_FIXED_SIZE:
         if (shouldToggle && -1 >= width)
         {
@@ -288,11 +363,13 @@ void perform_action()
             help(5, "Missing ATOMs to set for the property.");
         }
 
-        Atom temp_atom = XInternAtom(HHDisplay.attach(), atom_property_type, False);
+        Display *display = HHDisplay.attach();
+        Atom temp_atom = XInternAtom(display, atom_property_type, False);
         printf("Setting Property: %s -> %s\n", raw_name, *atoms);
         printf("ATOM Type: %s(%ld), ATOM Format (raw = %s): %i\n", atom_property_type, temp_atom, is_atom_raw ? "Yes" : "No", atom_format);
 
         HHWindow.set_property(window_id, raw_name, atoms, num_atoms, atom_property_type, atom_format, is_atom_raw);
+        HHDisplay.detach(display);
         break;
     case ACTION_RAW_EVENT:
         if (0 == strlen(raw_name))

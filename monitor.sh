@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# Monitors a Window for useful Properties.
+#
+# Run this script, click a Window to begin!
+
 echo "Click on the window you want to monitor..."
 
 window_id=$(xwininfo -int | grep -oP '(?<=Window id: )\d+')

@@ -1,6 +1,6 @@
 # Compiler Flags of sorts
 CC = gcc
-CFLAGS = -Isrc/lib -Wall -Wextra -Werror -g
+CFLAGS = -Isrc/lib -Wall -Wextra -Werror -Wno-unknown-pragmas -g
 LIBS = -lX11
 
 # Directory Vars

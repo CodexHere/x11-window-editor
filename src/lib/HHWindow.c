@@ -1,9 +1,7 @@
 #include "HHDisplay.h"
 #include "HHWindow.h"
 
-////////////////////////////////////////////////////////////
-// Helper Methods
-////////////////////////////////////////////////////////////
+#pragma region Raw Accessors
 
 void set_property(Window window_id, char *property_name, char *atom_names[], int num_atoms, char *atom_property_type, int atom_format, Bool is_atom_raw)
 {
@@ -36,15 +34,15 @@ void set_property(Window window_id, char *property_name, char *atom_names[], int
     Atom atom_property = XInternAtom(display, property_name, False);
     Atom atom_atom_property_type = XInternAtom(display, atom_property_type, False);
 
-    // printf(
-    //     "Setting Property (%s): %s(%ld) to %s (len=%i) [%s=%ld]",
-    //     expectingAString ? "Simple" : "Complex",
-    //     property_name,
-    //     atom_property,
-    //     value,
-    //     value_len,
-    //     atom_property_type,
-    //     atom_atom_property_type);
+    /*  printf(
+         "Setting Property (%s): %s(%ld) to %s (len=%i) [%s=%ld]",
+         is_atom_raw ? "Raw" : "Atom",
+         property_name,
+         atom_property,
+         value,
+         value_len,
+         atom_property_type,
+         atom_atom_property_type); */
 
     XChangeProperty(
         display,
@@ -94,9 +92,64 @@ void send_event(Window window_id, char *event_name, char *atom_names[], int num_
     HHDisplay.detach(display);
 }
 
-////////////////////////////////////////////////////////////
-// Normal Hints
-////////////////////////////////////////////////////////////
+#pragma endregion
+
+#pragma region Getters
+
+XWindowAttributes *get_attributes(Display *display, Window window_id)
+{
+    XWindowAttributes *attributes = malloc(sizeof(XWindowAttributes));
+
+    XGetWindowAttributes(display, window_id, attributes);
+
+    int x, y;
+    Window child;
+
+    // Translate Coords from Window -> Root Window
+    XTranslateCoordinates(display, window_id, DefaultRootWindow(display), 0, 0, &x, &y, &child);
+    attributes->x = x - attributes->x;
+    attributes->y = y - attributes->y;
+
+    Atom property_atom = XInternAtom(display, "_NET_FRAME_EXTENTS", False);
+    Atom actual_type_return;
+    int actual_format_return;
+    unsigned long nitems_return;
+    unsigned long bytes_after_return;
+    unsigned char *prop_return;
+
+    // Offset Coords by Window Extends
+    int status = XGetWindowProperty(
+        display,
+        window_id,
+        property_atom,
+        0,
+        4,
+        False,
+        AnyPropertyType,
+        &actual_type_return,
+        &actual_format_return,
+        &nitems_return,
+        &bytes_after_return,
+        &prop_return);
+
+    if (Success == status && None != actual_type_return && 32 == actual_format_return)
+    {
+        long *extents = (long *)prop_return;
+        long left = extents[0];
+        long top = extents[2];
+
+        attributes->x = (int)left - attributes->x;
+        attributes->y = (int)top - attributes->y;
+    }
+    else
+    {
+        printf("Failed to retrieve _NET_FRAME_EXTENTS property.\n");
+    }
+
+    XFree(prop_return);
+
+    return attributes;
+}
 
 XSizeHints *get_normal_hints(Display *display, Window window_id)
 {
@@ -120,6 +173,10 @@ XSizeHints *get_normal_hints(Display *display, Window window_id)
     return hints;
 }
 
+#pragma endregion
+
+#pragma region Toggles
+
 void toggle_fixed_size(Window window_id, Bool enable, int width, int height)
 {
     Display *display = HHDisplay.attach();
@@ -142,59 +199,6 @@ void toggle_fixed_size(Window window_id, Bool enable, int width, int height)
     XFree(hints);
 
     HHDisplay.detach(display);
-}
-
-////////////////////////////////////////////////////////////
-// State
-////////////////////////////////////////////////////////////
-
-void minimize(Window window_id)
-{
-    char *atoms[] = {"_NET_WM_STATE_HIDDEN"};
-    send_event(window_id, "WM_CHANGE_STATE", atoms, 1, HH_EVENT_MODE_MINIMIZE, False);
-}
-
-void maximize(Window window_id)
-{
-    char *atoms[] = {
-        "_NET_WM_STATE_MAXIMIZED_HORZ",
-        "_NET_WM_STATE_MAXIMIZED_VERT"};
-    send_event(window_id, "_NET_WM_STATE", atoms, 2, HH_EVENT_MODE_ADD, False);
-}
-
-void set_title(Window window_id, char *value)
-{
-    set_property(window_id, "_NET_WM_NAME", (char *[]){value}, 1, "UTF8_STRING", 8, True);
-}
-
-void set_role(Window window_id, char *value)
-{
-    set_property(window_id, "WM_WINDOW_ROLE", (char *[]){value}, 1, "STRING", 8, True);
-}
-
-void set_window_type(Window window_id, char *value)
-{
-    set_property(window_id, "_NET_WM_WINDOW_TYPE", (char *[]){value}, 1, "ATOM", 32, False);
-}
-
-void raise(Window window_id)
-{
-    // https://specifications.freedesktop.org/wm-spec/1.3/ar01s03.html#:~:text=_NET_ACTIVE_WINDOW%2C%20WINDOW/32
-
-    send_event(window_id, "_NET_ACTIVE_WINDOW", (char *[]){"0"}, 1, HH_EVENT_MODE_ADD, True);
-}
-
-void restore(Window window_id)
-{
-    char *atoms[] = {
-        "_NET_WM_STATE_MAXIMIZED_HORZ",
-        "_NET_WM_STATE_MAXIMIZED_VERT",
-        "_NET_WM_STATE_HIDDEN",
-        "_NET_WM_STATE_STICKY"
-        //
-    };
-
-    send_event(window_id, "_NET_WM_STATE", atoms, 4, HH_EVENT_MODE_REMOVE, False);
 }
 
 void toggle_above(Window window_id, Bool isEnabled)
@@ -239,18 +243,117 @@ void toggle_taskbar(Window window_id, Bool isEnabled)
     send_event(window_id, "_NET_WM_STATE", atoms, 1, isEnabled ? HH_EVENT_MODE_ADD : HH_EVENT_MODE_REMOVE, False);
 }
 
-////////////////////////////////////////////////////////////
-// Namespace Definition
-////////////////////////////////////////////////////////////
+#pragma endregion
+
+#pragma region Actions
+
+void minimize(Window window_id)
+{
+    char *atoms[] = {"_NET_WM_STATE_HIDDEN"};
+    send_event(window_id, "WM_CHANGE_STATE", atoms, 1, HH_EVENT_MODE_MINIMIZE, False);
+}
+
+void maximize(Window window_id)
+{
+    char *atoms[] = {
+        "_NET_WM_STATE_MAXIMIZED_HORZ",
+        "_NET_WM_STATE_MAXIMIZED_VERT"};
+    send_event(window_id, "_NET_WM_STATE", atoms, 2, HH_EVENT_MODE_ADD, False);
+}
+
+void raise(Window window_id)
+{
+    // https://specifications.freedesktop.org/wm-spec/1.3/ar01s03.html#:~:text=_NET_ACTIVE_WINDOW%2C%20WINDOW/32
+
+    send_event(window_id, "_NET_ACTIVE_WINDOW", (char *[]){"0"}, 1, HH_EVENT_MODE_ADD, True);
+}
+
+void restore(Window window_id)
+{
+    char *atoms[] = {
+        "_NET_WM_STATE_MAXIMIZED_HORZ",
+        "_NET_WM_STATE_MAXIMIZED_VERT",
+        "_NET_WM_STATE_HIDDEN",
+        "_NET_WM_STATE_STICKY"
+        //
+    };
+
+    send_event(window_id, "_NET_WM_STATE", atoms, 4, HH_EVENT_MODE_REMOVE, False);
+}
+
+void move(Window window_id, int x, int y)
+{
+    Display *display = HHDisplay.attach();
+
+    XMoveWindow(display, window_id, x, y);
+
+    HHDisplay.detach(display);
+}
+
+void size(Window window_id, int width, int height)
+{
+    Display *display = HHDisplay.attach();
+
+    XResizeWindow(display, window_id, width, height);
+
+    HHDisplay.detach(display);
+}
+
+#pragma endregion
+
+#pragma region Properties
+
+void set_title(Window window_id, char *value)
+{
+    set_property(window_id, "_NET_WM_NAME", (char *[]){value}, 1, "UTF8_STRING", 8, True);
+}
+
+void set_role(Window window_id, char *value)
+{
+    set_property(window_id, "WM_WINDOW_ROLE", (char *[]){value}, 1, "STRING", 8, True);
+}
+
+void set_window_type(Window window_id, char *value)
+{
+    Display *display = HHDisplay.attach();
+    set_property(window_id, "_NET_WM_WINDOW_TYPE", (char *[]){value}, 1, "ATOM", 32, False);
+    XMapWindow(display, window_id);
+
+    HHDisplay.detach(display);
+}
+
+void set_class(Window window_id, char *value)
+{
+    // Display *display = HHDisplay.attach();
+
+    printf("\n\nset_class win_id: %ld -> %s", window_id, value);
+}
+
+void set_classname(Window window_id, char *value)
+{
+    printf("set_classname win_id: %ld -> %s", window_id, value);
+}
+
+#pragma endregion
+
+#pragma region Namespace Definition
 
 NSHHWindow HHWindow = {
 
     .minimize = minimize,
     .maximize = maximize,
     .raise = raise,
+    .move = move,
+    .size = size,
+
+    .get_attributes = get_attributes,
+    .get_normal_hints = get_normal_hints,
+
     .set_title = set_title,
     .set_role = set_role,
     .set_window_type = set_window_type,
+    .set_class = set_class,
+    .set_classname = set_classname,
 
     .toggle_above = toggle_above,
     .toggle_below = toggle_below,
@@ -267,3 +370,5 @@ NSHHWindow HHWindow = {
     .send_event = send_event
     //
 };
+
+#pragma endregion

@@ -1,5 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 
+# Tests a Window by putting it through the gamut.
+#
+# Run this script, click a Window to begin!
 
 step() {
     local enterkey

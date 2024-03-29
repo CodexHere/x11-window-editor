@@ -84,18 +84,25 @@ Review the `Help` output from the application.
 * [`_NET_WM_WINDOW_TYPE`s](https://specifications.freedesktop.org/wm-spec/latest/ar01s05.html#idm44882398096864)
 * [`_NET_WM_STATE`s](https://specifications.freedesktop.org/wm-spec/latest/ar01s05.html#idm44882398084176)
 
-
 ## TODO
 
 Backfill most, if not all niceties of `xdotool`/`xprop`/`wmctrl` needed for my Workspace Manager:
     * Set ClassName
     * Set Class
-    * Set Position
-    * Set Size
+    * Toggle Fixed Size - convert to 1 prop instead of width/height
+        * Value = enable, no value = disable
+    * Set Position - convert to 1 prop instead of x/y
+    * Set Size - convert to 1 prop instead of width/height
     * Set Transparency
     * Raise
     * Move to Monitor?
     * Move to Desktop?
+    * _NET_WM_STRUT Support?
+    * Motifs?
+        * _MOTIF_WM_HINTS
+        * https://stackoverflow.com/a/5186291
+        * https://codebrowser.dev/gtk/gtk/gdk/x11/MwmUtil.h.html
+        * https://gist.github.com/muktupavels/d03bb14ea6042b779df89b4c87df975d
 
 Ideas:
     * Consider refactoring to use `getopt_long`
