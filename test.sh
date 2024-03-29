@@ -16,17 +16,42 @@ window_id=$(xwininfo -int | grep -oP '(?<=Window id: )\d+')
 
 echo "Testing Window: $window_id"
 
-step "Maximize"
+
+step "Set Custom Title"
+
+WINDOW_TITLE="Custom Title Setting...                                       "
+NUM_TIMES=4
+TITLE_LENGTH=$(printf "%s" "$WINDOW_TITLE" | wc -c)
+DELAY=0.01
+
+i=0
+while [ "$i" -lt "$NUM_TIMES" ]; do
+  j=0
+  while [ "$j" -lt "$TITLE_LENGTH" ]; do
+    first_char=$(printf "%s" "$WINDOW_TITLE" | cut -c1)
+    rest=$(printf "%s" "$WINDOW_TITLE" | cut -c2-)
+    WINDOW_TITLE="${rest}${first_char}"
+    ./debug/edit_window --id="$window_id" --set-title="$WINDOW_TITLE"
+    sleep "$DELAY"
+    j=$((j+1))
+  done
+  i=$((i+1))
+done
+
+step "Set Custom Role"
+./debug/edit_window --id="$window_id" --set-role="Custom_Role"
+
+step "Maximize Window"
 ./debug/edit_window --id="$window_id" -m
 
-step "Restore"
+step "Restore Window"
 ./debug/edit_window --id="$window_id" -r
 
-step "Minimize"
+step "Minimize Window"
 ./debug/edit_window --id="$window_id" -n
 
-step "Restore"
-./debug/edit_window --id="$window_id" -r
+step "Raise Window"
+./debug/edit_window --id="$window_id" --raise
 
 step "Toggle Fixed Size: 300x300"
 ./debug/edit_window --id="$window_id" -z=true --width=300 --height=300

@@ -18,15 +18,19 @@ typedef struct
 {
     void (*minimize)(Window window_id);
     void (*maximize)(Window window_id);
+    void (*raise)(Window window_id);
+    void (*set_title)(Window window_id, char *value);
+    void (*set_role)(Window window_id, char *value);
+    void (*set_window_type)(Window window_id, char *value);
 
-    void (*toggleFixedSize)(Window window_id, Bool isEnabled, int width, int height);
-    void (*toggleSticky)(Window window_id, Bool isEnabled);
-    void (*toggleShade)(Window window_id, Bool isEnabled);
-    void (*toggleTaskbar)(Window window_id, Bool isEnabled);
-    void (*togglePager)(Window window_id, Bool isEnabled);
-    void (*toggleFullscreen)(Window window_id, Bool isEnabled);
-    void (*toggleAbove)(Window window_id, Bool isEnabled);
-    void (*toggleBelow)(Window window_id, Bool isEnabled);
+    void (*toggle_fixed_size)(Window window_id, Bool isEnabled, int width, int height);
+    void (*toggle_sticky)(Window window_id, Bool isEnabled);
+    void (*toggle_shade)(Window window_id, Bool isEnabled);
+    void (*toggle_taskbar)(Window window_id, Bool isEnabled);
+    void (*toggle_pager)(Window window_id, Bool isEnabled);
+    void (*toggle_fullscreen)(Window window_id, Bool isEnabled);
+    void (*toggle_above)(Window window_id, Bool isEnabled);
+    void (*toggle_below)(Window window_id, Bool isEnabled);
 
     void (*restore)(Window window_id);
 
@@ -35,10 +39,10 @@ typedef struct
     // All Props:
     //      https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html#idm46485863921328
 
-    void (*set_property)(Window window_id, char *property_name, char *atom_names[], int num_atoms);
+    void (*set_property)(Window window_id, char *property_name, char *atom_names[], int num_atoms, char *atom_type, int atom_format, Bool is_atom_raw);
 
     // _NET_WM_STATE: https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html#idm46485863892896
-    void (*send_event)(Window window_id, char *event_name, char *atom_names[], int num_atoms, HH_EVENT_MODE mode);
+    void (*send_event)(Window window_id, char *event_name, char *atom_names[], int num_atoms, HH_EVENT_MODE mode, Bool is_atom_raw);
 } NSHHWindow;
 
 extern NSHHWindow HHWindow;

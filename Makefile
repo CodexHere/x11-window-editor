@@ -42,9 +42,9 @@ $(FILES_OBJ_LIB): $(DIR_DEBUG)/%.o : $(DIR_SRC)/%.c
 	@$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 	@echo "Built: $@"
 
-# Rule to build the object files
+# Rule to build the output/final Binary files (depends on Objects for Lib to cascade builds)
 FILES_BINARIES: FILES_OBJ_LIB $(FILES_BINARIES) # Simple named map to files
-$(FILES_BINARIES): $(DIR_DEBUG)/%: $(DIR_SRC)/%.c
+$(FILES_BINARIES): $(DIR_DEBUG)/%: $(DIR_SRC)/%.c $(FILES_OBJ_LIB)
 	@mkdir -p $(DIR_DEBUG)
 	@$(CC) $(CFLAGS) $< -o $@ $(FILES_OBJ_LIB) $(LIBS)
 	@echo "Built: $@"

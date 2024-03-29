@@ -13,14 +13,52 @@ So that's why I built this simple command line tool in C - to do the quick and d
 ## Requirements
 
 ```sh
-sudo apt install libx11-dev
+sudo apt install -y libx11-dev
+
+# for dev
+
+sudo apt install -y inotify-tools
 ```
 
 ## Building
 
+A simple, but flexible, `Makefile` is included with the project:
+
 ```sh
 make
 ```
+
+## Developing
+
+A helpful script is included to rebuild the binaries when a source file is changed:
+
+```sh
+./dev.sh
+```
+
+### Other Helpful Scripts
+
+A couple other scripts are included which can be helpful to get information about a window, as well as run a window through the gamut.
+
+#### Monitor
+
+Monitor a window's status with `xprop`:
+
+```sh
+./monitor.sh
+```
+
+You'll click a window, and the information that's pertinent will be updated every 1s.
+
+#### Test a Window (Gamut)
+
+Put a Window through the gamut with the test script:
+
+```sh
+./test.sh
+```
+
+You'll click a window, and the script will pause for continuation on every step in the test.
 
 ## Install
 
@@ -29,6 +67,8 @@ make install
 # or
 make install DIR_INSTALL=../output
 ```
+
+> Default `DIR_INSTALL` is set to `./release`.
 
 ## Usage
 
@@ -48,13 +88,14 @@ Review the `Help` output from the application.
 ## TODO
 
 Backfill most, if not all niceties of `xdotool`/`xprop`/`wmctrl` needed for my Workspace Manager:
-    * Set Name
     * Set ClassName
     * Set Class
-    * Set Role
     * Set Position
     * Set Size
     * Set Transparency
+    * Raise
+    * Move to Monitor?
+    * Move to Desktop?
 
 Ideas:
     * Consider refactoring to use `getopt_long`

@@ -8,7 +8,8 @@
   "C_Cpp.codeAnalysis.clangTidy.enabled": true,
   "C_Cpp.codeAnalysis.clangTidy.checks.disabled": [
     "clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling",
-    "clang-analyzer-security.insecureAPI.strcpy"
+    "clang-analyzer-security.insecureAPI.strcpy",
+    "bugprone-easily-swappable-parameters"
   ],
   "C_Cpp.codeAnalysis.clangTidy.checks.enabled": ["bugprone-*", "misc-unused-*", "modernize-*"]
 }

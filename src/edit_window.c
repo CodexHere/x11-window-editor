@@ -5,12 +5,13 @@
 #include "./lib/HHCli.h"
 #include "./lib/HHDisplay.h"
 #include "./lib/HHWindow.h"
+#include "./lib/HHUtil.h"
 
 /**
  * Exit Codes
  * 1 - Missing SubCommand
  * 5 - Invalid number of arguments for SubCommand
- * 19 - Invalid format/type of arguments for SubCommand
+ * 10 - Invalid format/type of arguments for SubCommand
  * 50 - Window ID is invalid, or doesn't exist
  * 99 - Out of memory / Couldn't allocate
  */
@@ -19,6 +20,24 @@ Window window_id;
 Action action = ACTION_NONE;
 Bool shouldToggle = False;
 int width = -1, height = -1;
+
+char *raw_name;
+int num_atoms = 0;
+char **atoms;
+HH_EVENT_MODE event_mode;
+Bool is_atom_raw;
+int atom_format = 32;
+char *atom_property_type = "ATOMS";
+
+void set_action(Action setting_action)
+{
+    if (ACTION_NONE != action)
+    {
+        help(1, "Please only perform ONE Sub Command per run.");
+    }
+
+    action = setting_action; // NOLINT
+}
 
 void process_arguments(int argc, char *argv[])
 {
@@ -40,53 +59,65 @@ void process_arguments(int argc, char *argv[])
 
             if (0 == window_id)
             {
-                help(5, "Invalid Window ID Format.");
+                help(10, "Invalid Window ID Format.");
             }
 
             break;
         case 'm':
-            action = ACTION_MAXIMIZE;
+            set_action(ACTION_MAXIMIZE);
             break;
         case 'n':
-            action = ACTION_MINIMIZE;
+            set_action(ACTION_MINIMIZE);
             break;
         case 'r':
-            action = ACTION_RESTORE;
+            set_action(ACTION_RESTORE);
+            break;
+        case 'l':
+            set_action(ACTION_SET_TITLE);
+            raw_name = optarg;
+            break;
+        case 'o':
+            set_action(ACTION_SET_ROLE);
+            raw_name = optarg;
+            break;
+        case 'w':
+            set_action(ACTION_SET_WINDOW_TYPE);
+            raw_name = optarg;
             break;
 
         /////////////////////////////////////////////////////////////////////////////
         // Toggle Params
         /////////////////////////////////////////////////////////////////////////////
         case 'z':
-            action = ACTION_TOGGLE_FIXED_SIZE;
+            set_action(ACTION_TOGGLE_FIXED_SIZE);
             shouldToggle = NULL != optarg;
             break;
         case 'a':
-            action = ACTION_TOGGLE_ABOVE;
+            set_action(ACTION_TOGGLE_ABOVE);
             shouldToggle = NULL != optarg;
             break;
         case 'b':
-            action = ACTION_TOGGLE_BELOW;
+            set_action(ACTION_TOGGLE_BELOW);
             shouldToggle = NULL != optarg;
             break;
         case 's':
-            action = ACTION_TOGGLE_SHADE;
+            set_action(ACTION_TOGGLE_SHADE);
             shouldToggle = NULL != optarg;
             break;
         case 'y':
-            action = ACTION_TOGGLE_STICKY;
+            set_action(ACTION_TOGGLE_STICKY);
             shouldToggle = NULL != optarg;
             break;
         case 't':
-            action = ACTION_TOGGLE_TASKBAR;
+            set_action(ACTION_TOGGLE_TASKBAR);
             shouldToggle = NULL != optarg;
             break;
         case 'p':
-            action = ACTION_TOGGLE_PAGER;
+            set_action(ACTION_TOGGLE_PAGER);
             shouldToggle = NULL != optarg;
             break;
         case 'f':
-            action = ACTION_TOGGLE_FULLSCREEN;
+            set_action(ACTION_TOGGLE_FULLSCREEN);
             shouldToggle = NULL != optarg;
             break;
 
@@ -109,6 +140,45 @@ void process_arguments(int argc, char *argv[])
             break;
 
         /////////////////////////////////////////////////////////////////////////////
+        // Actions w/o Short Codes
+        /////////////////////////////////////////////////////////////////////////////
+        case 500:
+            set_action(ACTION_RAISE);
+            break;
+
+        /////////////////////////////////////////////////////////////////////////////
+        // Raw Setters
+        /////////////////////////////////////////////////////////////////////////////
+        case 1000: // Set Raw Property
+            set_action(ACTION_RAW_PROP);
+            raw_name = optarg;
+            break;
+        case 1010: // Send Raw Event
+            set_action(ACTION_RAW_EVENT);
+            raw_name = optarg;
+            break;
+        case 1500: // Set ATOMs list
+            atoms = HHUtil.delimit(optarg, ",", &num_atoms);
+            break;
+        case 1505: // Set ATOMs format
+            atom_format = atoi(optarg);
+            if (atom_format != 8 && atom_format != 16 && atom_format != 32)
+            {
+                sprintf(err_msg, "Invalid ATOM Format! %s", optarg);
+                help(10, err_msg);
+            }
+            break;
+        case 1506: // Set ATOMs Type
+            atom_property_type = optarg;
+            break;
+        case 1507: // Set Atom Raw mode
+            is_atom_raw = True;
+            break;
+        case 1510: // Set Event Mode (add/remove/toggle/etc)
+            event_mode = atoi(optarg);
+            break;
+
+        /////////////////////////////////////////////////////////////////////////////
         // Error Cases / Handlers
         /////////////////////////////////////////////////////////////////////////////
         case '?': // Extra param?
@@ -121,7 +191,7 @@ void process_arguments(int argc, char *argv[])
             help(1, "An unknown error has occurred.");
             break;
         default:
-            sprintf(err_msg, "Unknown Argument: %c", opt);
+            sprintf(err_msg, "Unknown Argument: %c (%i)", opt, opt);
             help(5, err_msg);
         }
     }
@@ -144,49 +214,103 @@ void perform_action()
         printf("Window Restore");
         HHWindow.restore(window_id);
         break;
+    case ACTION_RAISE:
+        printf("Window Raise");
+        HHWindow.raise(window_id);
+        break;
+
+    case ACTION_SET_TITLE:
+        printf("Setting Title: %s", raw_name);
+        HHWindow.set_title(window_id, raw_name);
+        break;
+    case ACTION_SET_ROLE:
+        printf("Setting Role: %s", raw_name);
+        HHWindow.set_role(window_id, raw_name);
+        break;
+    case ACTION_SET_WINDOW_TYPE:
+        printf("Setting Window Type: %s", raw_name);
+        HHWindow.set_window_type(window_id, raw_name);
+        break;
     case ACTION_TOGGLE_FIXED_SIZE:
         if (shouldToggle && -1 >= width)
         {
-            help(5, "Missing or invalid Width option.");
+            help(10, "Missing or invalid Width option.");
         }
 
         if (shouldToggle && -1 >= height)
         {
-            help(5, "Missing or invalid Height option.");
+            help(10, "Missing or invalid Height option.");
         }
 
         printf("Toggling Fixed Size: %s : w=%i, h=%i", shouldToggle ? "Yes" : "No", width, height);
 
-        HHWindow.toggleFixedSize(window_id, shouldToggle, width, height);
+        HHWindow.toggle_fixed_size(window_id, shouldToggle, width, height);
         break;
     case ACTION_TOGGLE_ABOVE:
         printf("Toggling Always Above: %s", shouldToggle ? "Yes" : "No");
-        HHWindow.toggleAbove(window_id, shouldToggle);
+        HHWindow.toggle_above(window_id, shouldToggle);
         break;
     case ACTION_TOGGLE_BELOW:
         printf("Toggling Always Below: %s", shouldToggle ? "Yes" : "No");
-        HHWindow.toggleBelow(window_id, shouldToggle);
+        HHWindow.toggle_below(window_id, shouldToggle);
         break;
     case ACTION_TOGGLE_SHADE:
         printf("Toggling Shade: %s", shouldToggle ? "Yes" : "No");
-        HHWindow.toggleShade(window_id, shouldToggle);
+        HHWindow.toggle_shade(window_id, shouldToggle);
         break;
     case ACTION_TOGGLE_STICKY:
         printf("Toggling Sticky: %s", shouldToggle ? "Yes" : "No");
-        HHWindow.toggleSticky(window_id, shouldToggle);
+        HHWindow.toggle_sticky(window_id, shouldToggle);
         break;
     case ACTION_TOGGLE_TASKBAR:
         printf("Toggling Taskbar: %s", shouldToggle ? "Yes" : "No");
-        HHWindow.toggleTaskbar(window_id, shouldToggle);
+        HHWindow.toggle_taskbar(window_id, shouldToggle);
         break;
     case ACTION_TOGGLE_PAGER:
         printf("Toggling Pager: %s", shouldToggle ? "Yes" : "No");
-        HHWindow.togglePager(window_id, shouldToggle);
+        HHWindow.toggle_pager(window_id, shouldToggle);
         break;
     case ACTION_TOGGLE_FULLSCREEN:
         printf("Toggling Fullscreen: %s", shouldToggle ? "Yes" : "No");
-        HHWindow.toggleFullscreen(window_id, shouldToggle);
+        HHWindow.toggle_fullscreen(window_id, shouldToggle);
         break;
+
+    /////////////////////////////////////////////////////////////////////////////
+    // Raw Setters
+    /////////////////////////////////////////////////////////////////////////////
+    case ACTION_RAW_PROP:
+        if (0 == strlen(raw_name))
+        {
+            help(5, "Missing Property Name to set.");
+        }
+        if (0 == num_atoms)
+        {
+            help(5, "Missing ATOMs to set for the property.");
+        }
+
+        Atom temp_atom = XInternAtom(HHDisplay.attach(), atom_property_type, False);
+        printf("Setting Property: %s -> %s\n", raw_name, *atoms);
+        printf("ATOM Type: %s(%ld), ATOM Format (raw = %s): %i\n", atom_property_type, temp_atom, is_atom_raw ? "Yes" : "No", atom_format);
+
+        HHWindow.set_property(window_id, raw_name, atoms, num_atoms, atom_property_type, atom_format, is_atom_raw);
+        break;
+    case ACTION_RAW_EVENT:
+        if (0 == strlen(raw_name))
+        {
+            help(5, "Missing Event Name to send.");
+        }
+        if (0 == num_atoms)
+        {
+            help(5, "Missing ATOMs to send with the Event.");
+        }
+
+        printf("Sending Event: %s -> %s (mode = %i, raw = %s)", raw_name, *atoms, event_mode, is_atom_raw ? "Yes" : "No");
+        HHWindow.send_event(window_id, raw_name, atoms, num_atoms, event_mode, is_atom_raw);
+        break;
+
+    /////////////////////////////////////////////////////////////////////////////
+    // Error Cases / Handlers
+    /////////////////////////////////////////////////////////////////////////////
     default:
         help(5, "Missing Sub Command to perform!");
         break;
