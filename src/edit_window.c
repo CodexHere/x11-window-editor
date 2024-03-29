@@ -22,8 +22,8 @@ Bool shouldToggle = False;
 int width = -1, height = -1, x = -1, y = -1;
 
 char *raw_name;
-int num_atoms = 0;
-char **atoms;
+int num_items_delimited = 0;
+char **delimited_items;
 HH_EVENT_MODE event_mode;
 Bool is_atom_raw;
 int atom_format = 32;
@@ -91,6 +91,14 @@ void process_arguments(int argc, char *argv[])
         case 'z':
             set_action(ACTION_TOGGLE_FIXED_SIZE);
             shouldToggle = NULL != optarg;
+
+            if (shouldToggle)
+            {
+                delimited_items = HHUtil.delimit(optarg, ",", &num_items_delimited);
+
+                width = atoi(delimited_items[0]);
+                height = atoi(delimited_items[1]);
+            }
             break;
         case 'a':
             set_action(ACTION_TOGGLE_ABOVE);
@@ -122,38 +130,6 @@ void process_arguments(int argc, char *argv[])
             break;
 
         /////////////////////////////////////////////////////////////////////////////
-        // Reusable Params
-        /////////////////////////////////////////////////////////////////////////////
-        case 1005: // width
-            width = atoi(optarg);
-            if (0 >= width)
-            {
-                help(10, "Invalid Width.");
-            }
-            break;
-        case 1006: // height
-            height = atoi(optarg);
-            if (0 >= height)
-            {
-                help(10, "Invalid Height.");
-            }
-            break;
-        case 1001: // x
-            x = atoi(optarg);
-            if (0 > x)
-            {
-                help(10, "Invalid X.");
-            }
-            break;
-        case 1002: // y
-            y = atoi(optarg);
-            if (0 > y)
-            {
-                help(10, "Invalid Y.");
-            }
-            break;
-
-        /////////////////////////////////////////////////////////////////////////////
         // Actions w/o Short Codes
         /////////////////////////////////////////////////////////////////////////////
         case 1500:
@@ -161,9 +137,18 @@ void process_arguments(int argc, char *argv[])
             break;
         case 1501:
             set_action(ACTION_MOVE);
+
+            delimited_items = HHUtil.delimit(optarg, ",", &num_items_delimited);
+
+            x = atoi(delimited_items[0]);
+            y = atoi(delimited_items[1]);
             break;
         case 1502:
             set_action(ACTION_SIZE);
+            delimited_items = HHUtil.delimit(optarg, ",", &num_items_delimited);
+
+            width = atoi(delimited_items[0]);
+            height = atoi(delimited_items[1]);
             break;
 
         case 1600:
@@ -187,7 +172,7 @@ void process_arguments(int argc, char *argv[])
             raw_name = optarg;
             break;
         case 9500: // Set ATOMs list
-            atoms = HHUtil.delimit(optarg, ",", &num_atoms);
+            delimited_items = HHUtil.delimit(optarg, ",", &num_items_delimited);
             break;
         case 9505: // Set ATOMs format
             atom_format = atoi(optarg);
@@ -358,17 +343,17 @@ void perform_action()
         {
             help(5, "Missing Property Name to set.");
         }
-        if (0 == num_atoms)
+        if (0 == num_items_delimited)
         {
             help(5, "Missing ATOMs to set for the property.");
         }
 
         Display *display = HHDisplay.attach();
         Atom temp_atom = XInternAtom(display, atom_property_type, False);
-        printf("Setting Property: %s -> %s\n", raw_name, *atoms);
+        printf("Setting Property: %s -> %s\n", raw_name, *delimited_items);
         printf("ATOM Type: %s(%ld), ATOM Format (raw = %s): %i\n", atom_property_type, temp_atom, is_atom_raw ? "Yes" : "No", atom_format);
 
-        HHWindow.set_property(window_id, raw_name, atoms, num_atoms, atom_property_type, atom_format, is_atom_raw);
+        HHWindow.set_property(window_id, raw_name, delimited_items, num_items_delimited, atom_property_type, atom_format, is_atom_raw);
         HHDisplay.detach(display);
         break;
     case ACTION_RAW_EVENT:
@@ -376,13 +361,13 @@ void perform_action()
         {
             help(5, "Missing Event Name to send.");
         }
-        if (0 == num_atoms)
+        if (0 == num_items_delimited)
         {
             help(5, "Missing ATOMs to send with the Event.");
         }
 
-        printf("Sending Event: %s -> %s (mode = %i, raw = %s)", raw_name, *atoms, event_mode, is_atom_raw ? "Yes" : "No");
-        HHWindow.send_event(window_id, raw_name, atoms, num_atoms, event_mode, is_atom_raw);
+        printf("Sending Event: %s -> %s (mode = %i, raw = %s)", raw_name, *delimited_items, event_mode, is_atom_raw ? "Yes" : "No");
+        HHWindow.send_event(window_id, raw_name, delimited_items, num_items_delimited, event_mode, is_atom_raw);
         break;
 
     /////////////////////////////////////////////////////////////////////////////

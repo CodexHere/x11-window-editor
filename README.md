@@ -33,7 +33,7 @@ make
 A helpful script is included to rebuild the binaries when a source file is changed:
 
 ```sh
-./dev.sh
+./scripts/dev.sh
 ```
 
 ### Other Helpful Scripts
@@ -45,20 +45,32 @@ A couple other scripts are included which can be helpful to get information abou
 Monitor a window's status with `xprop`:
 
 ```sh
-./monitor.sh
+./scripts/monitor.sh
 ```
 
 You'll click a window, and the information that's pertinent will be updated every 1s.
 
-#### Test a Window (Gamut)
+#### Testers
+
+> With all Testers (unless stated otherwise), you'll click a window, and the script will walk you through the test.
 
 Put a Window through the gamut with the test script:
 
 ```sh
-./test.sh
+./scripts/test.sh
 ```
 
-You'll click a window, and the script will pause for continuation on every step in the test.
+Perform an advanced Move with the move script:
+
+```sh
+./scripts/move.sh
+```
+
+Perform an advanced Resize with the resize script:
+
+```sh
+./scripts/resize.sh
+```
 
 ## Install
 
@@ -105,8 +117,6 @@ Backfill most, if not all niceties of `xdotool`/`xprop`/`wmctrl` needed for my W
         * https://gist.github.com/muktupavels/d03bb14ea6042b779df89b4c87df975d
 
 Ideas:
-    * Consider refactoring to use `getopt_long`
-        * https://www.ibm.com/docs/en/zos/3.1.0?topic=functions-getopt-long-command-long-option-parsing
     * Force window to systray
         * Captures an apps icon, and unmaps the window, and creates a systray icon to tuck the app away indefinitely. Will need the ability to restore the app, maybe just simply clicking the icon can restore it?
         * I think `initial_state=IconicState` from https://tronche.com/gui/x/xlib/ICC/client-to-window-manager/wm-hints.html#XWMHints

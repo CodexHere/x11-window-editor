@@ -108,5 +108,5 @@ do
 
   # echo "Resize: $easeVal_width, $easeVal_height"
 
-  ./debug/edit_window --id "$window_id" --width "$easeVal_width" --height "$easeVal_height" --size > /dev/null 2>&1 
+  ./debug/edit_window --id="$window_id" --size="$easeVal_width, $easeVal_height" > /dev/null 2>&1 
 done

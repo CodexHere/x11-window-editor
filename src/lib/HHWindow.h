@@ -19,12 +19,14 @@ typedef struct
 {
     void (*minimize)(Window window_id);
     void (*maximize)(Window window_id);
+    void (*restore)(Window window_id);
     void (*raise)(Window window_id);
     void (*move)(Window window_id, int x, int y);
     void (*size)(Window window_id, int width, int height);
 
     XSizeHints *(*get_normal_hints)(Display *display, Window window_id);
     XWindowAttributes *(*get_attributes)(Display *display, Window window_id);
+    XClassHint *(*get_class_hints)(Display *display, Window window_id);
 
     void (*set_title)(Window window_id, char *value);
     void (*set_role)(Window window_id, char *value);
@@ -40,8 +42,6 @@ typedef struct
     void (*toggle_fullscreen)(Window window_id, Bool isEnabled);
     void (*toggle_above)(Window window_id, Bool isEnabled);
     void (*toggle_below)(Window window_id, Bool isEnabled);
-
-    void (*restore)(Window window_id);
 
     // XChangeProperty Function:
     //      https://tronche.com/gui/x/xlib/window-information/XChangeProperty.html

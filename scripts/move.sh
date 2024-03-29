@@ -61,5 +61,5 @@ do
 
   # echo "Move: $easeVal_x, $easeVal_y"
 
-  ./debug/edit_window --id "$window_id" --x "$easeVal_x" --y "$easeVal_y" --move > /dev/null 2>&1 
+  ./debug/edit_window --id "$window_id" --move="$easeVal_x, $easeVal_y" > /dev/null 2>&1 
 done

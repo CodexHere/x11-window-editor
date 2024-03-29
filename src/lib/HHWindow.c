@@ -173,6 +173,15 @@ XSizeHints *get_normal_hints(Display *display, Window window_id)
     return hints;
 }
 
+XClassHint *get_class_hints(Display *display, Window window_id)
+{
+    XClassHint *hints = malloc(sizeof(XClassHint));
+
+    XGetClassHint(display, window_id, hints);
+
+    return hints;
+}
+
 #pragma endregion
 
 #pragma region Toggles
@@ -301,7 +310,7 @@ void size(Window window_id, int width, int height)
 
 #pragma endregion
 
-#pragma region Properties
+#pragma region Properties (Setters)
 
 void set_title(Window window_id, char *value)
 {
@@ -324,14 +333,32 @@ void set_window_type(Window window_id, char *value)
 
 void set_class(Window window_id, char *value)
 {
-    // Display *display = HHDisplay.attach();
+    Display *display = HHDisplay.attach();
 
-    printf("\n\nset_class win_id: %ld -> %s", window_id, value);
+    XClassHint *hints = get_class_hints(display, window_id);
+
+    hints->res_class = value;
+
+    XSetClassHint(display, window_id, hints);
+
+    XFree(hints);
+
+    HHDisplay.detach(display);
 }
 
 void set_classname(Window window_id, char *value)
 {
-    printf("set_classname win_id: %ld -> %s", window_id, value);
+    Display *display = HHDisplay.attach();
+
+    XClassHint *hints = get_class_hints(display, window_id);
+
+    hints->res_name = value;
+
+    XSetClassHint(display, window_id, hints);
+
+    XFree(hints);
+
+    HHDisplay.detach(display);
 }
 
 #pragma endregion

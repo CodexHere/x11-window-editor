@@ -5,9 +5,9 @@
 # Run this script, click a Window to begin!
 
 step() {
-    local enterkey
+    # shellcheck disable=SC2028
     echo "------------\nStep: $1, Press any key to continue..."
-    read enterkey
+    read -r
 }
 
 make
@@ -18,7 +18,6 @@ echo "Click on the window you want to Test..."
 window_id=$(xwininfo -int | grep -oP '(?<=Window id: )\d+')
 
 echo "Testing Window: $window_id"
-
 
 step "Set Custom Title"
 
@@ -55,6 +54,12 @@ step "Minimize Window"
 
 step "Raise Window"
 ./debug/edit_window --id="$window_id" --raise
+
+step "Set Class"
+./debug/edit_window --id="$window_id" --set-class="Custom_Class"
+
+step "Set ClassName"
+./debug/edit_window --id="$window_id" --set-classname="Custom_ClassName"
 
 step "Toggle Fixed Size: 300x300"
 ./debug/edit_window --id="$window_id" -z=true --width=300 --height=300
@@ -97,3 +102,13 @@ step "Toggle Fullscreen: On"
 ./debug/edit_window --id="$window_id" -f=true
 step "Toggle Fullscreen: Off"
 ./debug/edit_window --id="$window_id" -f
+
+step "Move to 100x100"
+./scripts/move.sh 100 100
+step "Move to 500x500"
+./scripts/move.sh 500 500
+
+step "Resize to 100x100"
+./scripts/resize.sh 100 100
+step "Resize to 500x500"
+./scripts/resize.sh 500 500

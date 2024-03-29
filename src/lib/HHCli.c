@@ -6,17 +6,12 @@ struct option long_options[] = {
     {"help", no_argument, NULL, 'h'},
     {"id", required_argument, NULL, 'i'},
 
-    {"x", required_argument, NULL, 1001},
-    {"y", required_argument, NULL, 1002},
-    {"width", required_argument, NULL, 1005},
-    {"height", required_argument, NULL, 1006},
-
     {"maximize", no_argument, NULL, 'm'},
     {"minimize", no_argument, NULL, 'n'},
     {"restore", no_argument, NULL, 'r'},
     {"raise", no_argument, NULL, 1500},
-    {"move", no_argument, NULL, 1501},
-    {"size", no_argument, NULL, 1502},
+    {"move", required_argument, NULL, 1501},
+    {"size", required_argument, NULL, 1502},
 
     {"set-title", required_argument, NULL, 'l'},
     {"set-role", required_argument, NULL, 'o'},
@@ -48,21 +43,18 @@ void help(int exit_code, char *error_message)
         " -h, --help: Displays this help message.\n\n"
         " -i <window_id>, --id <window_id>: The ID of the Window. This must *always* be supplied!\n\n"
         " <subcommand>: Any one of the Sub Commands detailed below, along with options:\n\n"
-        " --width=<width>: Used to supply Width values where necessary.\n\n"
-        " --height=<height>: Used to supply Height values where necessary.\n\n"
         " -m, --maximize: Maximizes a Window.\n\n"
         " -n, --minimize: Minimize a Window.\n\n"
         " -r, --restore: Restore typical values for a Window.\n\n"
-        " --move: Move a Window.  --x/--y *must* also be supplied!\n\n"
-        " --size: Size a Window.  --width/--height *must* also be supplied!\n\n"
+        " --move=\"<x>,<y>\": Move a Window.\n\n"
+        " --size=\"<width>,<height>\": Size a Window.\n\n"
         " -l=\"New Title\", --set-title=\"New Title\": Sets a Title for a Window.\n\n"
         " -o=\"New_Role\", --set-role=\"New_Role\": Sets a Role for a Window.\n\n"
         " -w=<window_type>, --set-window-type=<window_type>: Sets a Window Type for a Window.\n"
         "    See: https://specifications.freedesktop.org/wm-spec/1.5/ar01s05.html#:~:text=_NET_WM_WINDOW_TYPE%%2C%%20ATOM%%5B%%5D/32\n\n"
-        " -z%s[=<enabled>]%s, --toggle-fixed-size%s[=<enabled>]%s: Sets a fixed size for a Window.\n"
-        "    <enabled>: %s(Optional)%s Supply any value to Enable, leave empty to Disable.\n"
-        "      - If Disabling, removes fixed-size and ignores other options.\n"
-        "      - If Enabling, --width/--height *must* also be supplied!\n\n"
+        " -z%s[=\"<width>,<height>\"]%s, --toggle-fixed-size%s[=\"<width>,<height>\"]%s: Sets a fixed size for a Window.\n"
+        "      - If Empty, removes fixed-size and ignores other options.\n"
+        "      - If Set, fixes the width/height to supplied values.\n\n"
         " -a%s[=<enabled>]%s, --toggle-above=%s[<enabled>]%s: Toggles Always Above for a Window.\n"
         "    <enabled>: %s(Optional)%s Supply any value to Enable, leave empty to Disable.\n\n"
         " -b%s[=<enabled>]%s, --toggle-below=%s[<enabled>]%s: Toggles Always Below for a Window.\n"
@@ -94,7 +86,6 @@ void help(int exit_code, char *error_message)
 
         script_name,
 
-        COLOR_GREY, COLOR_RESET,
         COLOR_GREY, COLOR_RESET,
         COLOR_GREY, COLOR_RESET,
         COLOR_GREY, COLOR_RESET,
