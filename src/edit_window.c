@@ -25,9 +25,10 @@ char *raw_name;
 int num_items_delimited = 0;
 char **delimited_items;
 HH_EVENT_MODE event_mode;
-Bool is_atom_raw;
+HH_PROPERTY_LEN_MODE len_mode;
 int atom_format = 32;
 char *atom_property_type = "ATOMS";
+double applied_opacity = 1.0;
 
 void set_action(Action setting_action)
 {
@@ -159,6 +160,18 @@ void process_arguments(int argc, char *argv[])
             set_action(ACTION_SET_CLASSNAME);
             raw_name = optarg;
             break;
+        case 1602:
+            set_action(ACTION_SET_OPACITY);
+
+            if (0 != strlen(optarg))
+            {
+                applied_opacity = atof(optarg);
+                if (1 < applied_opacity || 0 > applied_opacity)
+                {
+                    help(10, "Opacity value must be between 0 and 1");
+                }
+            }
+            break;
 
         /////////////////////////////////////////////////////////////////////////////
         // Raw Setters
@@ -185,11 +198,11 @@ void process_arguments(int argc, char *argv[])
         case 9506: // Set ATOMs Type
             atom_property_type = optarg;
             break;
-        case 9507: // Set Atom Raw mode
-            is_atom_raw = True;
+        case 9507: // Set Atom Length Mode
+            len_mode = (HH_PROPERTY_LEN_MODE)atoi(optarg);
             break;
         case 9510: // Set Event Mode (add/remove/toggle/etc)
-            event_mode = atoi(optarg);
+            event_mode = (HH_EVENT_MODE)atoi(optarg);
             break;
 
         /////////////////////////////////////////////////////////////////////////////
@@ -287,6 +300,10 @@ void perform_action()
         printf("Setting ClassName: %s", raw_name);
         HHWindow.set_classname(window_id, raw_name);
         break;
+    case ACTION_SET_OPACITY:
+        printf("Setting Opacity: %.2f", applied_opacity);
+        HHWindow.set_opacity(window_id, applied_opacity);
+        break;
 
     /////////////////////////////////////////////////////////////////////////////
     // Toggle Values
@@ -351,9 +368,9 @@ void perform_action()
         Display *display = HHDisplay.attach();
         Atom temp_atom = XInternAtom(display, atom_property_type, False);
         printf("Setting Property: %s -> %s\n", raw_name, *delimited_items);
-        printf("ATOM Type: %s(%ld), ATOM Format (raw = %s): %i\n", atom_property_type, temp_atom, is_atom_raw ? "Yes" : "No", atom_format);
+        printf("ATOM Type: %s(%ld), ATOM Format (len_mode = %i): %i\n", atom_property_type, temp_atom, len_mode, atom_format);
 
-        HHWindow.set_property(window_id, raw_name, delimited_items, num_items_delimited, atom_property_type, atom_format, is_atom_raw);
+        HHWindow.set_property(window_id, raw_name, delimited_items, num_items_delimited, atom_property_type, atom_format, len_mode);
         HHDisplay.detach(display);
         break;
     case ACTION_RAW_EVENT:
@@ -366,8 +383,8 @@ void perform_action()
             help(5, "Missing ATOMs to send with the Event.");
         }
 
-        printf("Sending Event: %s -> %s (mode = %i, raw = %s)", raw_name, *delimited_items, event_mode, is_atom_raw ? "Yes" : "No");
-        HHWindow.send_event(window_id, raw_name, delimited_items, num_items_delimited, event_mode, is_atom_raw);
+        printf("Sending Event: %s -> %s (mode = %i, len_mode = %i)", raw_name, *delimited_items, event_mode, len_mode);
+        HHWindow.send_event(window_id, raw_name, delimited_items, num_items_delimited, event_mode, len_mode);
         break;
 
     /////////////////////////////////////////////////////////////////////////////

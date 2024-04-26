@@ -112,3 +112,6 @@ step "Resize to 100x100"
 ./scripts/resize.sh 100 100
 step "Resize to 500x500"
 ./scripts/resize.sh 500 500
+
+step "Opacity Fade 0->1"
+./scripts/opacity.sh

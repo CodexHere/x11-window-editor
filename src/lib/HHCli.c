@@ -18,6 +18,7 @@ struct option long_options[] = {
     {"set-window-type", required_argument, NULL, 'w'},
     {"set-class", required_argument, NULL, 1600},
     {"set-classname", required_argument, NULL, 1601},
+    {"set-opacity", optional_argument, NULL, 1602},
 
     {"toggle-fixed-size", optional_argument, NULL, 'z'},
     {"toggle-above", optional_argument, NULL, 'a'},
@@ -28,11 +29,13 @@ struct option long_options[] = {
     {"toggle-pager", optional_argument, NULL, 'p'},
     {"toggle-fullscreen", optional_argument, NULL, 'f'},
     {"raw-set-prop", required_argument, NULL, 9000},
+    {"raw-set-property", required_argument, NULL, 9000},
     {"raw-send-event", required_argument, NULL, 9010},
     {"atoms", required_argument, NULL, 9500},
     {"atom-format", required_argument, NULL, 9505},
     {"atom-type", required_argument, NULL, 9506},
-    {"atom-value-raw", no_argument, NULL, 9507},
+    {"atom-len-mode", required_argument, NULL, 9507},
+    {"atom-length-mode", required_argument, NULL, 9507},
     {"event-mode", required_argument, NULL, 9510},
     {0, 0, 0, 0}};
 
@@ -52,6 +55,9 @@ void help(int exit_code, char *error_message)
         " -o=\"New_Role\", --set-role=\"New_Role\": Sets a Role for a Window.\n\n"
         " -w=<window_type>, --set-window-type=<window_type>: Sets a Window Type for a Window.\n"
         "    See: https://specifications.freedesktop.org/wm-spec/1.5/ar01s05.html#:~:text=_NET_WM_WINDOW_TYPE%%2C%%20ATOM%%5B%%5D/32\n\n"
+        " --set-class=<class_type>: Sets a Class for a Window (aka XClassHint::res_class).\n\n"
+        " --set-class-name=<class_name>: Sets a Class Name for a Window (aka XClassHint::res_name).\n\n"
+        " --set-opacity=<0..1>: Sets the Opacity level for a Window. Must be a decimal between 0 and 1.\n\n"
         " -z%s[=\"<width>,<height>\"]%s, --toggle-fixed-size%s[=\"<width>,<height>\"]%s: Sets a fixed size for a Window.\n"
         "      - If Empty, removes fixed-size and ignores other options.\n"
         "      - If Set, fixes the width/height to supplied values.\n\n"
@@ -74,7 +80,10 @@ void help(int exit_code, char *error_message)
         " --atom-format=8|16|32: Used to specify the ATOM Format in Bits. Defaults to 32.\n\n"
         " --atom-type=<atom_type>: Used to specify the ATOM Type. Defaults to \"ATOM.\"\n"
         "   See: https://tronche.com/gui/x/xlib/window-information/properties-and-atoms.html#:~:text=The%%20built%%2Din%%20property%%20types%%20are\n\n"
-        " --atom-value-raw: If set, values specified in `--atoms` will NOT be converted to XAtom types.\n\n"
+        " --atom-len-mode=<mode>: Values specified in `--atoms` will be handled according to this mode setting. Defaults to `0` (aka `HH_PROPERTY_LEN_MODE_ATOMIZED`)\n"
+        "   - 0, aka HH_PROPERTY_LEN_MODE_ATOMIZED: For most cases.\n"
+        "   - 1, aka HH_PROPERTY_LEN_MODE_CARDINAL: For CARDINAL Property types.\n"
+        "   - 2, aka HH_PROPERTY_LEN_MODE_RAW: For most STRING Property types.\n\n"
         " --event-mode=0|1|2|3: Used to specify the Event Mode.\n"
         "   - 0 = Remove | 1 = Add | 2 = Toggle (doesn't always work) | 3 = IconicState\n\n"
         " --raw-set-prop=<prop_name>: Sets a series of Atoms for a given Property Name\n"

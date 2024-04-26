@@ -99,13 +99,8 @@ Review the `Help` output from the application.
 ## TODO
 
 Backfill most, if not all niceties of `xdotool`/`xprop`/`wmctrl` needed for my Workspace Manager:
-    * Set ClassName
-    * Set Class
-    * Toggle Fixed Size - convert to 1 prop instead of width/height
-        * Value = enable, no value = disable
-    * Set Position - convert to 1 prop instead of x/y
-    * Set Size - convert to 1 prop instead of width/height
-    * Set Transparency
+    * Add ability to select window if one isn't provided!
+        * https://github.com/tmathmeyer/xprop/blob/master/dsimple.c#L274-L283
     * Raise
     * Move to Monitor?
     * Move to Desktop?
@@ -115,6 +110,7 @@ Backfill most, if not all niceties of `xdotool`/`xprop`/`wmctrl` needed for my W
         * https://stackoverflow.com/a/5186291
         * https://codebrowser.dev/gtk/gtk/gdk/x11/MwmUtil.h.html
         * https://gist.github.com/muktupavels/d03bb14ea6042b779df89b4c87df975d
+    * Test helper scripts need window_id and other params injected
 
 Ideas:
     * Force window to systray

@@ -5,6 +5,7 @@
       "cStandard": "c23",
       "cppStandard": "gnu++23",
       "intelliSenseMode": "linux-gcc-x64",
+      "compilerArgs": ["-lX11"],
       "browse": {
         "path": ["/usr/include", "${workspaceFolder}"]
       },

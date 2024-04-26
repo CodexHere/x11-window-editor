@@ -15,6 +15,13 @@ typedef enum
     HH_EVENT_MODE_MINIMIZE = IconicState
 } HH_EVENT_MODE;
 
+typedef enum
+{
+    HH_PROPERTY_LEN_MODE_ATOMIZED = 0,
+    HH_PROPERTY_LEN_MODE_CARDINAL = 1,
+    HH_PROPERTY_LEN_MODE_RAW = 2
+} HH_PROPERTY_LEN_MODE;
+
 typedef struct
 {
     void (*minimize)(Window window_id);
@@ -33,6 +40,7 @@ typedef struct
     void (*set_window_type)(Window window_id, char *value);
     void (*set_class)(Window window_id, char *value);
     void (*set_classname)(Window window_id, char *value);
+    void (*set_opacity)(Window window_id, double value);
 
     void (*toggle_fixed_size)(Window window_id, Bool isEnabled, int width, int height);
     void (*toggle_sticky)(Window window_id, Bool isEnabled);
@@ -48,7 +56,7 @@ typedef struct
     // All Props:
     //      https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html#idm46485863921328
 
-    void (*set_property)(Window window_id, char *property_name, char *atom_names[], int num_atoms, char *atom_type, int atom_format, Bool is_atom_raw);
+    void (*set_property)(Window window_id, char *property_name, char *atom_names[], int num_atoms, char *atom_type, int atom_format, HH_PROPERTY_LEN_MODE len_mode);
 
     // _NET_WM_STATE: https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html#idm46485863892896
     void (*send_event)(Window window_id, char *event_name, char *atom_names[], int num_atoms, HH_EVENT_MODE mode, Bool is_atom_raw);

@@ -3,7 +3,7 @@
 
 #pragma region Raw Accessors
 
-void set_property(Window window_id, char *property_name, char *atom_names[], int num_atoms, char *atom_property_type, int atom_format, Bool is_atom_raw)
+void set_property(Window window_id, char *property_name, char *atom_names[], int num_atoms, char *atom_property_type, int atom_format, HH_PROPERTY_LEN_MODE len_mode)
 {
     Display *display = HHDisplay.attach();
 
@@ -22,8 +22,13 @@ void set_property(Window window_id, char *property_name, char *atom_names[], int
 
     // Determine the `value` and `value_len` based on whether we expect a simple string set or not
     // Value is either the first "atom" as a simple string, or all atoms combined
-    value = is_atom_raw ? (unsigned char *)atom_names[0] : (unsigned char *)atoms;
-    value_len = is_atom_raw ? (int)strlen((char *)value) : num_valid_atoms;
+    value = HH_PROPERTY_LEN_MODE_ATOMIZED != len_mode ? (unsigned char *)atom_names[0] : (unsigned char *)atoms;
+    // clang-format off
+    value_len = HH_PROPERTY_LEN_MODE_RAW == len_mode
+        ? (int)strlen((char *)value) 
+            : HH_PROPERTY_LEN_MODE_ATOMIZED == len_mode
+                ? num_valid_atoms : 1;
+    // clang-format on
 
     if (0 == strlen((char *)value))
     {
@@ -314,18 +319,18 @@ void size(Window window_id, int width, int height)
 
 void set_title(Window window_id, char *value)
 {
-    set_property(window_id, "_NET_WM_NAME", (char *[]){value}, 1, "UTF8_STRING", 8, True);
+    set_property(window_id, "_NET_WM_NAME", (char *[]){value}, 1, "UTF8_STRING", 8, HH_PROPERTY_LEN_MODE_RAW);
 }
 
 void set_role(Window window_id, char *value)
 {
-    set_property(window_id, "WM_WINDOW_ROLE", (char *[]){value}, 1, "STRING", 8, True);
+    set_property(window_id, "WM_WINDOW_ROLE", (char *[]){value}, 1, "STRING", 8, HH_PROPERTY_LEN_MODE_RAW);
 }
 
 void set_window_type(Window window_id, char *value)
 {
     Display *display = HHDisplay.attach();
-    set_property(window_id, "_NET_WM_WINDOW_TYPE", (char *[]){value}, 1, "ATOM", 32, False);
+    set_property(window_id, "_NET_WM_WINDOW_TYPE", (char *[]){value}, 1, "ATOM", 32, HH_PROPERTY_LEN_MODE_ATOMIZED);
     XMapWindow(display, window_id);
 
     HHDisplay.detach(display);
@@ -361,6 +366,23 @@ void set_classname(Window window_id, char *value)
     HHDisplay.detach(display);
 }
 
+void set_opacity(Window window_id, double value)
+{
+    unsigned int opacity_value = (unsigned int)(0xFFFFFFFFul * value);
+    char *passthrough_values[] = {(char *)&opacity_value};
+
+    set_property(
+        window_id,
+        "_NET_WM_WINDOW_OPACITY",
+        passthrough_values,
+        1,
+        "CARDINAL",
+        32,
+        HH_PROPERTY_LEN_MODE_CARDINAL
+        //
+    );
+}
+
 #pragma endregion
 
 #pragma region Namespace Definition
@@ -381,6 +403,7 @@ NSHHWindow HHWindow = {
     .set_window_type = set_window_type,
     .set_class = set_class,
     .set_classname = set_classname,
+    .set_opacity = set_opacity,
 
     .toggle_above = toggle_above,
     .toggle_below = toggle_below,
